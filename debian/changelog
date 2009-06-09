@@ -1,3 +1,17 @@
+memstat (0.6) unstable; urgency=low
+
+  * Corrected path in reference to memstat-tutorial.txt.gz, closes: #502844
+  * Made program read name of executable instead of guessing it from the memory
+    information, closes: #503026
+  * Added option to only show information for one process.
+  * Do not list memory mapping devices, closes: #47260, #58290, #108510
+  * List all other device mappings, closes: #496778
+  * Count double mapped pages twice, closes: #496777
+  * Completely redid the whol calculation part.
+  * Bumped Standards-Version to 3.8.1, no changes needed.
+
+ -- Michael Meskes <meskes@debian.org>  Mon, 06 Apr 2009 16:11:19 +0200
+
 memstat (0.5) unstable; urgency=low
 
   * New maintainer, closes: #485998
