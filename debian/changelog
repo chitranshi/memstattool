@@ -1,3 +1,10 @@
+memstat (0.7) unstable; urgency=low
+
+  * If a process is stopped while processing, memstat no longer stops, but
+    instead prints out an error and continues working, closes: #531435
+
+ -- Michael Meskes <meskes@debian.org>  Tue, 02 Jun 2009 15:13:00 +0200
+
 memstat (0.6) unstable; urgency=low
 
   * Corrected path in reference to memstat-tutorial.txt.gz, closes: #502844

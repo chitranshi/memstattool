@@ -239,7 +239,7 @@ static void summarize_usage(void)
 {
     char buffer[8192];
     unsigned int i, fs, inode, pid, scan;
-    unsigned long offs, grand, lo, hi, total, sharedtotal, sharedgrand;
+    unsigned long offs, grand, lo = 0, hi = 0, total, sharedtotal, sharedgrand;
     mapping m;
     char *exe;
 
@@ -248,12 +248,13 @@ static void summarize_usage(void)
     for (offs = 0; offs < maptab_fill; offs = scan) {
 	char linkname[PATH_MAX], filename[PATH_MAX];
 	ssize_t len;
+	int deleted = 0;
 
 	pid = maptab_data[offs].pid;
 	sprintf(filename, "/proc/%d/exe", pid);
 	if ((len = readlink(filename, linkname, PATH_MAX)) == -1) {
 	    fprintf(stderr, "Cannot read link information for %s\n", filename);
-	    exit(1);
+	    deleted = 1;
 	}
 	linkname[len] = '\0';
 	total = 0;
@@ -261,14 +262,16 @@ static void summarize_usage(void)
 	    m = maptab_data + scan;
 	    if (m->pid != pid)
 		break;
-	    /* if fs and/or inode are set memory belong to the file listes */
+	    /* if fs and/or inode are set, memory belongs to the process listed */
 	    /* [vsyscall] is in kernel space */
-	    if (!m->fs && !m->inode && strcmp(m->path, "[vsyscall]"))
+	    if (!deleted && !m->fs && !m->inode && strcmp(m->path, "[vsyscall]"))
 		total += (m->hi - m->lo);
 	}
-	sprintf(buffer, "%7ldk: PID %5d (%s)", total / 1024, pid, linkname);
-	printline(buffer);
-	grand += total;
+	if (!deleted) {
+		sprintf(buffer, "%7ldk: PID %5d (%s)", total / 1024, pid, linkname);
+		printline(buffer);
+		grand += total;
+	}
     }
 
     qsort(maptab_data, maptab_fill, sizeof(struct mapping), (qcmp) sort_by_inode);
@@ -303,7 +306,7 @@ static void summarize_usage(void)
 		    hi = m->offs + m->hi - m->lo;
 		}
 #else
-		if (!hi) {
+		if (hi == 0) {
 		    lo = m->offs;
 		    hi = m->offs + m->hi - m->lo;
 		} else if (hi != m->offs + m->hi - m->lo) {

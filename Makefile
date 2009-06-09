@@ -3,7 +3,7 @@
 # Copyright 1998, by Bernd Eckenfels <ecki@debian.org>
 # This file is under the GPL.
 #
-CFLAGS = -g -Wall
+CFLAGS = -g -Wall -O2
 prefix = $(DESTDIR)/
 exec_prefix = $(prefix)/usr
 
