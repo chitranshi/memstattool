@@ -62,7 +62,7 @@ static void read_proc(void)
 {
     unsigned int nread, pid;
     unsigned long inode, lo, hi, offs;
-    char *p, dev[80], buff[PATH_MAX + 300], *path, perm[4];
+    char *p, major[8], minor[8], buff[PATH_MAX + 300], *path, perm[4];
     DIR *d;
     struct dirent *ent;
     FILE *f;
@@ -92,18 +92,24 @@ static void read_proc(void)
 	    p = strchr(buff, '-');
 	    if (p)
 		*p = ' ';
+	    p = strchr(buff, ':');
+	    if (p)
+		*p = ' ';
 	    path = NULL;
 	    if ((strlen(buff) == 10) && (strcmp(buff, " (deleted)") == 0))
 		continue;
-	    nread = sscanf(buff, "%lx %lx %4s %lx %s %lu %as", &lo, &hi, perm, &offs, dev, &inode, &path);
-	    if (nread < 6) {
+	    nread = sscanf(buff, "%lx %lx %4s %lx %s %s %lu %as", &lo, &hi, perm, &offs, major, minor, &inode, &path);
+	    if (nread < 7) {
 		fprintf(stderr, "I don't recognize format of /proc/%d/maps. (nread=%d)\n", pid, nread);
 		exit(1);
 	    }
 	    if (maptab_fill == maptab_size)
 		maptab_expand();
 	    m = maptab_data + maptab_fill;
-	    m->fs = (dev_t)strtol(dev, NULL, 16);
+	    /* under some circumstances strtol returns errno still set to an old value */
+	    /* let's play it safe here and set errno to 0 to not error out */
+	    errno = 0;
+	    m->fs = (dev_t)(strtol(major, NULL, 16) * 256 + strtol(minor, NULL, 16));
 	    if (errno != 0) {
 		perror("strtol");
                 exit(1);
@@ -114,7 +120,7 @@ static void read_proc(void)
 	    m->lo = lo;
 	    m->hi = hi;
 	    m->valid = 1;
-	    if ((nread == 7) && path && path[0]) {
+	    if ((nread == 8) && path && path[0]) {
 		int i;
 
 		m->path = path;
@@ -123,7 +129,7 @@ static void read_proc(void)
 			m->valid = 0;
 		}
 	    } else {
-		sprintf(buff, "[%04x]:%lu", m->fs, inode);
+		sprintf(buff, "[%s:%s]:%lu", major, minor, inode);
 		m->path = strdup(buff);
 		needinode = 1;
 	    }
@@ -321,6 +327,8 @@ static void summarize_usage(void)
 	/* do we have a segment left that hasn't been counted? */
 	if (hi != 0)
 	    sharedtotal += (hi - lo);
+	sprintf(buffer, "%7ldk(%7ldk): %s", (total + sharedtotal) / 1024, sharedtotal / 1024, exe);
+
 	pid = 0;
 	for (i = offs; i < scan; i++) {
 	    m = maptab_data + i;
@@ -329,7 +337,6 @@ static void summarize_usage(void)
 		sprintf(buffer + strlen(buffer), " %d", pid);
 	    }
 	}
-	sprintf(buffer, "%7ldk(%7ldk): %s", (total + sharedtotal) / 1024, sharedtotal / 1024, exe);
 	printline(buffer);
 	grand += total;
 	sharedgrand += sharedtotal;
