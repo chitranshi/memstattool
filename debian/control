@@ -7,7 +7,6 @@ Build-Depends: debhelper (>= 7)
 
 Package: memstat
 Architecture: any
-Priority: optional
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: Identify what's using up virtual memory
  Lists all the processes, executables, and shared libraries
