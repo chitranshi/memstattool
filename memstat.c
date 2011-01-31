@@ -77,6 +77,7 @@ static void read_proc(void)
 	ent = readdir(d);
 	if (ent == NULL)
 	    break;
+	errno = 0;
 	pid = strtol(ent->d_name, NULL, 10);
 	if (errno != 0) {
 		perror("strtol");
@@ -106,8 +107,6 @@ static void read_proc(void)
 	    if (maptab_fill == maptab_size)
 		maptab_expand();
 	    m = maptab_data + maptab_fill;
-	    /* under some circumstances strtol returns errno still set to an old value */
-	    /* let's play it safe here and set errno to 0 to not error out */
 	    errno = 0;
 	    m->fs = (dev_t)(strtol(major, NULL, 16) * 256 + strtol(minor, NULL, 16));
 	    if (errno != 0) {
