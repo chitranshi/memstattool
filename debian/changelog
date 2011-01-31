@@ -2,6 +2,7 @@ memstat (0.9) unstable; urgency=low
 
   * Set errno to 0 before running strtol so the check afterwards works,
     closes: #611181
+  * Bumped Standards-Version to 3.9.1, no changes needed.
 
  -- Michael Meskes <meskes@debian.org>  Mon, 31 Jan 2011 12:03:33 +0100
 
